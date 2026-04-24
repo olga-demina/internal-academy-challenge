@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { LogOut, Settings } from 'lucide-vue-next';
 import {
     DropdownMenuGroup,
@@ -28,7 +28,7 @@ defineProps<Props>();
     <DropdownMenuSeparator />
     <DropdownMenuGroup>
         <DropdownMenuItem :as-child="true">
-            <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
+            <Link class="block w-full cursor-pointer" :href="edit.url()" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
                 Settings
             </Link>
@@ -38,8 +38,8 @@ defineProps<Props>();
     <DropdownMenuItem :as-child="true">
         <Link
             class="block w-full cursor-pointer"
-            :href="logout()"
-            @click="handleLogout"
+            method="post"
+            :href="logout.url()"
             as="button"
             data-test="logout-button"
         >
