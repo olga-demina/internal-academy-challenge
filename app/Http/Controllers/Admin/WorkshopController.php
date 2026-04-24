@@ -12,8 +12,14 @@ class WorkshopController extends Controller {
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response {
-        return Inertia::render('Admin/Workshop/Index');
+    public function index(Request $request): Response {
+        $workshops = $request->user()
+            ->workshops()
+            ->latest()
+            ->paginate(10);
+        return Inertia::render('Admin/Workshop/Index', [
+            'workshops' => $workshops
+        ]);
     }
 
     /**
