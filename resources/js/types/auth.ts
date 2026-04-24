@@ -1,5 +1,6 @@
 export type User = {
     id: number;
+    role: 'admin' | 'employee';
     name: string;
     email: string;
     avatar?: string;
