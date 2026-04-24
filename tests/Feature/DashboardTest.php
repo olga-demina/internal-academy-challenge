@@ -2,15 +2,26 @@
 
 use App\Models\User;
 
-test('guests are redirected to the login page', function () {
-    $response = $this->get(route('dashboard'));
-    $response->assertRedirect(route('login'));
+test('guest is redirected to login when accessing admin dashboard', function () {
+    $this->get(route('admin.dashboard'))->assertRedirect(route('login'));
 });
 
-test('authenticated users can visit the dashboard', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
+test('guest is redirected to login when accessing employee dashboard', function () {
+    $this->get(route('employee.dashboard'))->assertRedirect(route('login'));
+});
 
-    $response = $this->get(route('dashboard'));
-    $response->assertOk();
+test('admin can access admin dashboard', function () {
+    $user = User::factory()->admin()->create();
+
+    $this->actingAs($user)
+        ->get(route('admin.dashboard'))
+        ->assertOk();
+});
+
+test('employee can access employee dashboard', function () {
+    $user = User::factory()->employee()->create();
+
+    $this->actingAs($user)
+        ->get(route('employee.dashboard'))
+        ->assertOk();
 });
