@@ -16,16 +16,11 @@ import {
 } from '@/components/ui/sidebar';
 import { useDashboardRoute } from '@/composables/useDashboardRoute';
 import type { NavItem } from '@/types';
+import { useNavItems } from '@/composables/useNavItems';
 
 const dashboardHref = useDashboardRoute();
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboardHref,
-        icon: LayoutGrid,
-    },
-];
+const mainNavItems = useNavItems();
 
 const footerNavItems: NavItem[] = [];
 </script>
