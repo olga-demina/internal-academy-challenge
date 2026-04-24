@@ -8,17 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Workshop extends Model
-{
+class Workshop extends Model {
     use HasFactory, SoftDeletes;
 
-    public function creator(): BelongsTo
-    {
+    protected $guarded = [];
+
+    public function creator(): BelongsTo {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function registrations(): HasMany
-    {
+    public function registrations(): HasMany {
         return $this->hasMany(Registration::class);
     }
 }
