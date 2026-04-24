@@ -1,0 +1,38 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use App\Models\Workshop;
+use Illuminate\Database\Seeder;
+
+class WorkshopSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $admin = User::where('email', 'admin@academy.test')->first();
+
+        Workshop::factory()->count(3)->create(['user_id' => $admin->id]);
+
+        Workshop::factory()->count(3)->withHighCapacity()->create(['user_id' => $admin->id]);
+
+        Workshop::factory()->count(3)->withLowCapacity()->create([
+            'user_id' => $admin->id,
+            'title'   => 'Full Workshop – Waiting List Demo',
+        ]);
+
+        Workshop::factory()->tomorrow()->create([
+            'user_id'  => $admin->id,
+            'title'    => 'Tomorrow\'s Workshop – Reminder Demo',
+            'capacity' => 20,
+        ]);
+
+        Workshop::factory()->past()->count(3)->create(['user_id' => $admin->id]);
+
+        Workshop::factory()->today()->create([
+            'user_id'  => $admin->id,
+            'title'    => 'Today\'s Workshop',
+            'capacity' => 15,
+        ]);
+    }
+}
