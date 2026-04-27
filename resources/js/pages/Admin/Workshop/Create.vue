@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 import { store } from '@/routes/admin/workshops';
+import { useWorkshopSchedule } from '@/composables/useWorkshopSchedule';
 
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,8 @@ const form = useForm({
     ends_at: '',
     capacity: 1,
 });
+
+const { duration } = useWorkshopSchedule(form);
 
 function submit() {
     form.post(store().url, {
@@ -51,27 +54,35 @@ function submit() {
                 </div>
 
                 <!-- Dates -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="grid gap-2">
-                        <Label for="starts_at">Start</Label>
-                        <Input
-                            id="starts_at"
-                            type="datetime-local"
-                            v-model="form.starts_at"
-                            required
-                        />
-                        <InputError :message="form.errors.starts_at" />
+                <div class="grid gap-2">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="grid gap-2">
+                            <Label for="starts_at">Start</Label>
+                            <Input
+                                id="starts_at"
+                                type="datetime-local"
+                                step="900"
+                                v-model="form.starts_at"
+                                required
+                            />
+                            <InputError :message="form.errors.starts_at" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="ends_at">End</Label>
+                            <Input
+                                id="ends_at"
+                                type="datetime-local"
+                                step="900"
+                                v-model="form.ends_at"
+                                required
+                            />
+                            <InputError :message="form.errors.ends_at" />
+                        </div>
                     </div>
 
-                    <div class="grid gap-2">
-                        <Label for="ends_at">End</Label>
-                        <Input
-                            id="ends_at"
-                            type="datetime-local"
-                            v-model="form.ends_at"
-                            required
-                        />
-                        <InputError :message="form.errors.ends_at" />
+                    <div v-if="duration" class="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                        Duration: <span class="font-medium text-foreground">{{ duration }}</span>
                     </div>
                 </div>
 

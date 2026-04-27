@@ -7,3 +7,7 @@ export function formatDateTime(date: string) {
 export function formatRange(start: string, end: string) {
     return `${format(parseISO(start), 'dd/MM/yyyy HH:mm')} - ${format(parseISO(end), 'HH:mm')}`;
 }
+
+export function toDatetimeLocal(date: string) {
+    return format(parseISO(date), "yyyy-MM-dd'T'HH:mm");
+}

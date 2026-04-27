@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ModifyWorkshopRequest;
 use App\Http\Requests\StoreWorkshopRequest;
 use App\Models\Workshop;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -56,15 +56,19 @@ class WorkshopController extends Controller {
      */
     public function edit(Workshop $workshop): Response {
         return Inertia::render('Admin/Workshop/Edit', [
-            'workshop' => $workshop
+            'workshop' => $workshop,
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Workshop $workshop) {
-        //
+    public function update(ModifyWorkshopRequest $request, Workshop $workshop) {
+        $workshop->update($request->validated());
+
+        return redirect()
+            ->route('admin.workshops.index')
+            ->with('success', 'Workshop updated successfully.');
     }
 
     /**
