@@ -21,7 +21,6 @@ defineOptions({
 defineProps<{
     status?: string;
     canResetPassword: boolean;
-    canRegister: boolean;
 }>();
 </script>
 
