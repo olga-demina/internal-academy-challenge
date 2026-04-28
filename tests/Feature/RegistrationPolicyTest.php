@@ -11,7 +11,7 @@ test('employee can register for a workshop with available seats', function () {
     $employee = User::factory()->employee()->create();
     $workshop = Workshop::factory()->create(['capacity' => 5]);
 
-    expect($employee->can('create', $workshop))->toBeTrue();
+    expect($employee->can('create', [Registration::class, $workshop]))->toBeTrue();
 });
 
 test('employee cannot register for a full workshop', function () {
@@ -19,7 +19,7 @@ test('employee cannot register for a full workshop', function () {
     $workshop = Workshop::factory()->create(['capacity' => 1]);
     Registration::factory()->confirmed()->create(['workshop_id' => $workshop->id]);
 
-    expect($employee->can('create', $workshop))->toBeFalse();
+    expect($employee->can('create', [Registration::class, $workshop]))->toBeFalse();
 });
 
 test('employee cannot register for the same workshop twice', function () {
@@ -30,14 +30,14 @@ test('employee cannot register for the same workshop twice', function () {
         'workshop_id' => $workshop->id,
     ]);
 
-    expect($employee->can('create', $workshop))->toBeFalse();
+    expect($employee->can('create', [Registration::class, $workshop]))->toBeFalse();
 });
 
 test('admin cannot register for a workshop', function () {
     $admin = User::factory()->admin()->create();
     $workshop = Workshop::factory()->create(['capacity' => 10]);
 
-    expect($admin->can('create', $workshop))->toBeFalse();
+    expect($admin->can('create', [Registration::class, $workshop]))->toBeFalse();
 });
 
 // --- delete (cancel) ---
