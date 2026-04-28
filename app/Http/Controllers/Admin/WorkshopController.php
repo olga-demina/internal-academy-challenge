@@ -18,6 +18,7 @@ class WorkshopController extends Controller {
     public function index(Request $request): Response {
         $workshops = $request->user()
             ->workshops()
+            ->withAvailableSeats()
             ->latest()
             ->paginate(10);
         return Inertia::render('Admin/Workshop/Index', [

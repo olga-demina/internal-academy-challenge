@@ -11,7 +11,8 @@ class WorkshopController extends Controller
 {
     public function index(): Response
     {
-        $workshops = Workshop::where('starts_at', '>', now())
+        $workshops = Workshop::withAvailableSeats()
+            ->where('starts_at', '>', now())
             ->orderBy('starts_at')
             ->get(['id', 'title', 'description', 'starts_at', 'ends_at', 'capacity']);
 

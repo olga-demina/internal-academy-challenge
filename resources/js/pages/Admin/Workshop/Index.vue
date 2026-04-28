@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { create, edit, destroy } from '@/routes/admin/workshops';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
     DialogContent,
@@ -23,6 +24,7 @@ defineProps<{
             starts_at: string;
             ends_at: string;
             capacity: number;
+            available_seats: number;
         }>;
     };
 }>();
@@ -63,24 +65,18 @@ function executeDelete() {
             >
                 <div class="flex justify-between gap-4">
                     <div class="flex flex-col gap-2">
-                        <h2 class="text-lg font-semibold">
-                            {{ workshop.title }}
-                        </h2>
-                        <p class="text-sm text-gray-500">
-                            {{ workshop.description }}
-                        </p>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-lg font-semibold">{{ workshop.title }}</h2>
+                            <Badge v-if="workshop.available_seats === 0" variant="destructive">Full</Badge>
+                        </div>
+                        <p class="text-sm text-gray-500">{{ workshop.description }}</p>
                         <p class="mt-2 flex items-center gap-1.5 text-sm">
                             <CalendarDays class="size-4 shrink-0" />
-                            {{
-                                formatRange(
-                                    workshop.starts_at,
-                                    workshop.ends_at,
-                                )
-                            }}
+                            {{ formatRange(workshop.starts_at, workshop.ends_at) }}
                         </p>
                         <p class="flex items-center gap-1.5 text-sm">
                             <Users class="size-4 shrink-0" />
-                            Max seats: {{ workshop.capacity }}
+                            {{ workshop.available_seats }} / {{ workshop.capacity }} seats available
                         </p>
                     </div>
 

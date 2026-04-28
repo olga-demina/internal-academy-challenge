@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\RegistrationStatus;
 use App\Models\User;
 use App\Models\Workshop;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -16,7 +17,7 @@ class RegistrationFactory extends Factory
         return [
             'user_id'     => User::factory()->employee(),
             'workshop_id' => Workshop::factory(),
-            'status'      => 'confirmed',
+            'status'      => RegistrationStatus::Confirmed,
             'promoted_at' => null,
         ];
     }
@@ -24,7 +25,7 @@ class RegistrationFactory extends Factory
     public function confirmed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status'      => 'confirmed',
+            'status'      => RegistrationStatus::Confirmed,
             'promoted_at' => null,
         ]);
     }
@@ -32,7 +33,7 @@ class RegistrationFactory extends Factory
     public function waiting(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status'      => 'waiting',
+            'status'      => RegistrationStatus::Waiting,
             'promoted_at' => null,
         ]);
     }
@@ -40,7 +41,7 @@ class RegistrationFactory extends Factory
     public function promoted(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status'      => 'confirmed',
+            'status'      => RegistrationStatus::Confirmed,
             'promoted_at' => now(),
         ]);
     }
