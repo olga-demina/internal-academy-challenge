@@ -73,3 +73,23 @@ quires a single change.
 ## UX / UI
 
 - automatic completion of end date set to one hour to simplify form usage
+
+---
+
+## 5. Waitlist
+
+### Promotion via Observer
+
+Waitlist promotion is handled by `RegistrationObserver::deleted()`, not in the controller. This means promotion fires regardless of how a registration is deleted (controller, console, future admin action).
+
+### Policy does not check capacity
+
+`RegistrationPolicy::create` only checks that the user is not already registered (confirmed or waiting). The controller decides the status (confirmed vs waiting) based on availability at request time. This avoids a race condition where the policy and the controller disagree on capacity.
+
+### registration_status over is_registered
+
+The employee workshop list receives `registration_status: 'confirmed' | 'waiting' | null` instead of a boolean. Any future state added to the enum is automatically available to the frontend without a schema change.
+
+### Flash messages over client-side inference
+
+Toast messages after sign-up/cancel are driven by the backend flash session, not inferred from frontend state. This avoids showing the wrong message when availability changes between page load and form submission.
