@@ -1,7 +1,16 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { create, edit, destroy } from '@/routes/admin/workshops';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { formatRange } from '@/lib/date';
 
 defineProps<{
@@ -16,6 +25,19 @@ defineProps<{
         }>;
     };
 }>();
+
+const workshopToDelete = ref<number | null>(null);
+
+function confirmDelete(id: number) {
+    workshopToDelete.value = id;
+}
+
+function executeDelete() {
+    if (workshopToDelete.value === null) return;
+    router.delete(destroy(workshopToDelete.value).url, {
+        onFinish: () => { workshopToDelete.value = null; },
+    });
+}
 </script>
 
 <template>
@@ -65,13 +87,12 @@ defineProps<{
                             <Button variant="outline">Edit</Button>
                         </Link>
 
-                        <Link
-                            as="button"
-                            method="delete"
-                            :href="destroy(workshop.id)"
+                        <Button
+                            variant="destructive"
+                            @click="confirmDelete(workshop.id)"
                         >
-                            <Button variant="destructive"> Delete </Button>
-                        </Link>
+                            Delete
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -79,4 +100,24 @@ defineProps<{
 
         <div v-else class="text-center text-gray-500">No workshops yet.</div>
     </div>
+
+    <!-- Delete confirmation dialog -->
+    <Dialog :open="workshopToDelete !== null" @update:open="workshopToDelete = null">
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Delete workshop</DialogTitle>
+                <DialogDescription>
+                    This action cannot be undone. The workshop will be permanently deleted.
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <Button variant="outline" @click="workshopToDelete = null">
+                    Cancel
+                </Button>
+                <Button variant="destructive" @click="executeDelete">
+                    Delete
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>

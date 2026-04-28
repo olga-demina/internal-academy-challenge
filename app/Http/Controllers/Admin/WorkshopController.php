@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DeleteWorkshopRequest;
 use App\Http\Requests\ModifyWorkshopRequest;
 use App\Http\Requests\StoreWorkshopRequest;
 use App\Models\Workshop;
@@ -74,7 +75,12 @@ class WorkshopController extends Controller {
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Workshop $workshop) {
-        //
+    public function destroy(DeleteWorkshopRequest $request, Workshop $workshop) {
+        // TODO: notify confirmed registrants and waitlisted users that the workshop has been cancelled
+        $workshop->delete();
+
+        return redirect()
+            ->route('admin.workshops.index')
+            ->with('success', 'Workshop deleted successfully.');
     }
 }
