@@ -14,12 +14,15 @@ test('employee can register for a workshop with available seats', function () {
     expect($employee->can('create', [Registration::class, $workshop]))->toBeTrue();
 });
 
-test('employee cannot register for a full workshop', function () {
+test('employee can join waitlist for a full workshop', function () {
     $employee = User::factory()->employee()->create();
     $workshop = Workshop::factory()->create(['capacity' => 1]);
     Registration::factory()->confirmed()->create(['workshop_id' => $workshop->id]);
 
-    expect($employee->can('create', [Registration::class, $workshop]))->toBeFalse();
+    expect($employee->can('create', [
+        Registration::class,
+        $workshop
+    ]))->toBeTrue();
 });
 
 test('employee cannot register for the same workshop twice', function () {
@@ -32,6 +35,21 @@ test('employee cannot register for the same workshop twice', function () {
 
     expect($employee->can('create', [Registration::class, $workshop]))->toBeFalse();
 });
+
+test('employee cannot join waitlist if already waiting', function () {
+    $employee = User::factory()->employee()->create();
+    $workshop = Workshop::factory()->create(['capacity' => 1]);
+    Registration::factory()->waiting()->create([
+        'user_id' => $employee->id,
+        'workshop_id' => $workshop->id,
+    ]);
+
+    expect($employee->can('create', [
+        Registration::class,
+        $workshop
+    ]))->toBeFalse();
+});
+
 
 test('admin cannot register for a workshop', function () {
     $admin = User::factory()->admin()->create();
@@ -57,9 +75,11 @@ test('employee cannot cancel another user registration', function () {
     expect($employee->can('delete', $registration))->toBeFalse();
 });
 
-test('employee cannot cancel a waiting registration', function () {
+test('employee can cancel their own waiting registration', function () {
     $employee = User::factory()->employee()->create();
-    $registration = Registration::factory()->waiting()->create(['user_id' => $employee->id]);
+    $registration =
+        Registration::factory()->waiting()->create(['user_id' =>
+        $employee->id]);
 
-    expect($employee->can('delete', $registration))->toBeFalse();
+    expect($employee->can('delete', $registration))->toBeTrue();
 });
