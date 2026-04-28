@@ -25,4 +25,9 @@ class Registration extends Model {
     public function workshop(): BelongsTo {
         return $this->belongsTo(Workshop::class);
     }
+
+    public function scopeConfirmedForAdmin($query, int $adminId): void {
+        $query->whereHas('workshop', fn($q) => $q->where('user_id', $adminId))
+            ->where('status', RegistrationStatus::Confirmed);
+    }
 }

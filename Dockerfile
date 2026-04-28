@@ -22,7 +22,7 @@ RUN npm run build
 FROM php:8.3-fpm-alpine
 
 RUN apk add --no-cache nginx supervisor sqlite-dev && \
-    docker-php-ext-install pdo_sqlite bcmath
+    docker-php-ext-install pdo_sqlite bcmath pcntl
 
 WORKDIR /app
 

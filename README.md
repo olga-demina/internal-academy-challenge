@@ -30,6 +30,10 @@ The app will be available at `http://localhost:8080`.
 
 The container automatically runs migrations and seeds the database on startup — no manual setup required.
 
+Two ports are exposed:
+- `http://localhost:8080` — web app
+- `ws://localhost:6001` — Reverb WebSocket server (real-time updates)
+
 ### Without Docker
 
 ```bash
@@ -53,6 +57,16 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:8000`.
+
+#### Real-time updates (WebSockets)
+
+The admin dashboard shows a live registration counter powered by Laravel Reverb. To enable it locally, start Reverb in a separate terminal:
+
+```bash
+php artisan reverb:start
+```
+
+Without Reverb running, the counter will still show the correct value on page load — it just won't update in real-time.
 
 ---
 

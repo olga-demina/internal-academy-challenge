@@ -8,6 +8,6 @@ touch database/database.sqlite
 php artisan migrate --force
 php artisan db:seed --force
 
-chown -R www-data:www-data database
+chown -R www-data:www-data database storage bootstrap/cache
 
 exec supervisord -c /etc/supervisord.conf

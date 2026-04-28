@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Registration;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,7 +18,10 @@ class DashboardController extends Controller
             ->orderByDesc('total_registrations_count')
             ->first();
 
+        $totalConfirmed = Registration::confirmedForAdmin($request->user()->id)->count();
+
         return Inertia::render('Admin/Dashboard', [
+            'totalConfirmed' => $totalConfirmed,
             'mostPopular' => $mostPopular ? [
                 'title'       => $mostPopular->title,
                 'starts_at'   => $mostPopular->starts_at,
