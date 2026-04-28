@@ -10,7 +10,7 @@ class DeleteRegistrationRequest extends FormRequest {
         $registration = $this->route('workshop')
             ->registrations()
             ->where('user_id', $this->user()->id)
-            ->where('status', RegistrationStatus::Confirmed)
+            ->whereIn('status', [RegistrationStatus::Confirmed, RegistrationStatus::Waiting])
             ->first();
 
         return $registration && $this->user()->can('delete', $registration);

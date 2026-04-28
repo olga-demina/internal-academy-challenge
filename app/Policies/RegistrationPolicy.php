@@ -13,22 +13,13 @@ class RegistrationPolicy {
             return false;
         }
 
-        $confirmedCount = $workshop->registrations()
-            ->where('status', RegistrationStatus::Confirmed)
-            ->count();
-
-        if ($confirmedCount >= $workshop->capacity) {
-            return false;
-        }
-
         return !$workshop->registrations()
             ->where('user_id', $user->id)
-            ->where('status', RegistrationStatus::Confirmed)
+            ->whereIn('status', [RegistrationStatus::Confirmed, RegistrationStatus::Waiting])
             ->exists();
     }
 
     public function delete(User $user, Registration $registration): bool {
-        return $user->id === $registration->user_id
-            && $registration->status === RegistrationStatus::Confirmed;
+        return $user->id === $registration->user_id;
     }
 }

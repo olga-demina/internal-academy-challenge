@@ -8,26 +8,42 @@ use App\Http\Requests\DeleteRegistrationRequest;
 use App\Http\Requests\StoreRegistrationRequest;
 use App\Models\Workshop;
 
-class RegistrationController extends Controller
-{
-    public function store(StoreRegistrationRequest $request, Workshop $workshop)
-    {
+class RegistrationController extends Controller {
+    public function store(StoreRegistrationRequest $request, Workshop $workshop) {
+        $availableSeats = $workshop->capacity - $workshop->registrations()
+            ->where('status', RegistrationStatus::Confirmed)
+            ->count();
+
+        $status = $availableSeats > 0
+            ? RegistrationStatus::Confirmed
+            : RegistrationStatus::Waiting;
+
         $workshop->registrations()->create([
             'user_id' => $request->user()->id,
-            'status' => RegistrationStatus::Confirmed,
+            'status'  => $status,
         ]);
 
-        return redirect()->back()->with('success', 'You have successfully registered for this workshop.');
+        return redirect()->back()->with(
+            'success',
+            $status ===
+                RegistrationStatus::Confirmed
+                ? 'You have successfully registered for this workshop.'
+                : 'The workshop is full. You have been added to the waitlist.'
+        );
     }
 
-    public function destroy(DeleteRegistrationRequest $request, Workshop $workshop)
-    {
-        $workshop->registrations()
+    public function destroy(DeleteRegistrationRequest $request, Workshop $workshop) {
+        $registration = $workshop->registrations()
             ->where('user_id', $request->user()->id)
-            ->where('status', RegistrationStatus::Confirmed)
-            ->firstOrFail()
-            ->delete();
+            ->whereIn('status', [RegistrationStatus::Confirmed, RegistrationStatus::Waiting])
+            ->firstOrFail();
 
-        return redirect()->back();
+        $message = $registration->status === RegistrationStatus::Waiting
+            ? "You have left the waitlist for \"{$workshop->title}\"."
+            : "Your registration for \"{$workshop->title}\" has been cancelled.";
+
+        $registration->delete();
+
+        return redirect()->back()->with('success', $message);
     }
 }

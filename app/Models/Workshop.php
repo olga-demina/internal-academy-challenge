@@ -20,19 +20,22 @@ class Workshop extends Model {
         return $this->capacity - ($this->confirmed_registrations_count ?? 0);
     }
 
-    public function scopeWithAvailableSeats($query): void
-    {
+    public function scopeWithAvailableSeats($query): void {
         $query->withCount([
             'registrations as confirmed_registrations_count' => fn($q) => $q->where('status', RegistrationStatus::Confirmed),
         ]);
     }
 
-    public function scopeWithUserRegistration($query, int $userId): void
-    {
-        $query->withExists([
-            'registrations as is_registered' => fn($q) => $q
+    public function scopeWithUserRegistration($query, int $userId): void {
+        $query->addSelect([
+            'registration_status' => Registration::select('status')
+                ->whereColumn('workshop_id', 'workshops.id')
                 ->where('user_id', $userId)
-                ->where('status', RegistrationStatus::Confirmed),
+                ->whereIn('status', [
+                    RegistrationStatus::Confirmed,
+                    RegistrationStatus::Waiting
+                ])
+                ->limit(1),
         ]);
     }
 
