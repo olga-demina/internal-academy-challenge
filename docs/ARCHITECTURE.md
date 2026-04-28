@@ -93,3 +93,21 @@ The employee workshop list receives `registration_status: 'confirmed' | 'waiting
 ### Flash messages over client-side inference
 
 Toast messages after sign-up/cancel are driven by the backend flash session, not inferred from frontend state. This avoids showing the wrong message when availability changes between page load and form submission.
+
+---
+
+## 6. No Ubiquity (overlap prevention)
+
+An employee cannot register for two workshops that overlap in time. Adjacent workshops (one ends at T, the next starts at T) are allowed.
+
+### Overlap condition
+
+```
+starts_at < other.ends_at AND ends_at > other.starts_at
+```
+
+The check applies to both confirmed and waiting registrations — a waitlisted spot is treated as occupied since the user may be promoted.
+
+### Policy Response objects
+
+`RegistrationPolicy::create` returns `Response::deny('...')` instead of `false` so each failure reason carries a human-readable message. `StoreRegistrationRequest` reads this message via `Gate::inspect()` and redirects back with a flash error. This keeps authorization logic in the policy while giving the frontend a useful error message.
