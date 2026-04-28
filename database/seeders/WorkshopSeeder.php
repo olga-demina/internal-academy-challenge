@@ -27,6 +27,21 @@ class WorkshopSeeder extends Seeder
             'capacity' => 20,
         ]);
 
+        $slotA = now()->addDays(7)->setTime(9, 0);
+        $slotB = now()->addDays(7)->setTime(10, 0);
+
+        Workshop::factory()->startingAt($slotA)->create([
+            'user_id'  => $admin->id,
+            'title'    => 'Morning Session A (09:00–11:00)',
+            'capacity' => 20,
+        ]);
+
+        Workshop::factory()->startingAt($slotB)->create([
+            'user_id'  => $admin->id,
+            'title'    => 'Morning Session B (10:00–12:00) — overlaps with A',
+            'capacity' => 20,
+        ]);
+
         Workshop::factory()->past()->count(3)->create(['user_id' => $admin->id]);
 
         Workshop::factory()->today()->create([

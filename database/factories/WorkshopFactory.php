@@ -61,6 +61,14 @@ class WorkshopFactory extends Factory
         });
     }
 
+    public function startingAt(\DateTimeInterface $startsAt, int $durationHours = 2): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'starts_at' => $startsAt,
+            'ends_at'   => (clone $startsAt)->modify("+{$durationHours} hours"),
+        ]);
+    }
+
     public function withHighCapacity(): static
     {
         return $this->state(fn (array $attributes) => [
