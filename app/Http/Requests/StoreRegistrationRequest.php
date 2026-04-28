@@ -2,11 +2,12 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Registration;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRegistrationRequest extends FormRequest {
     public function authorize(): bool {
-        return $this->user()->can('create', $this->route('workshop'));
+        return $this->user()->can('create', [Registration::class, $this->route('workshop')]);
     }
 
     public function rules(): array {
