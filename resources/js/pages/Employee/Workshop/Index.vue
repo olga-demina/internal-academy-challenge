@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import { index as workshopsIndex } from '@/routes/employee/workshops';
-import { store as registerStore } from '@/routes/employee/workshops/registrations';
+import { store as registerStore, destroy as destroyRegistration } from '@/routes/employee/workshops/registrations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, Users } from 'lucide-vue-next';
@@ -45,6 +45,12 @@ const visibleWorkshops = computed(() =>
 function signUp(workshop: Workshop) {
     router.post(registerStore(workshop.id).url, {}, {
         onSuccess: () => toast.success(`Congratulations, you are going to attend "${workshop.title}"!`),
+    });
+}
+
+function cancelRegistration(workshop: Workshop) {
+    router.delete(destroyRegistration(workshop.id).url, {
+        onSuccess: () => toast.info(`Your registration for "${workshop.title}" has been cancelled.`),
     });
 }
 </script>
@@ -103,7 +109,14 @@ function signUp(workshop: Workshop) {
 
                     <div class="flex items-center">
                         <Button
-                            v-if="!workshop.is_registered"
+                            v-if="workshop.is_registered"
+                            variant="outline"
+                            @click="cancelRegistration(workshop)"
+                        >
+                            Cancel registration
+                        </Button>
+                        <Button
+                            v-else
                             :disabled="workshop.available_seats === 0"
                             @click="signUp(workshop)"
                         >

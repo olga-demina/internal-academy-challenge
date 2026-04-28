@@ -23,6 +23,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('employee.workshops.index');
         Route::post('/workshops/{workshop}/registrations', [EmployeeRegistrationController::class, 'store'])
             ->name('employee.workshops.registrations.store');
+        Route::delete('/workshops/{workshop}/registrations', [EmployeeRegistrationController::class, 'destroy'])
+            ->name('employee.workshops.registrations.destroy');
     });
 });
 
