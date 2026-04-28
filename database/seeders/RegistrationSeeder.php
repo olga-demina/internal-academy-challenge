@@ -50,6 +50,26 @@ class RegistrationSeeder extends Seeder
             ]);
         }
 
+        // High demand workshop: all seats confirmed + long waitlist
+        $highDemand = Workshop::where('title', 'Advanced Leadership Skills')->first();
+        if ($highDemand) {
+            $pool = $employees->shuffle();
+
+            $pool->take($highDemand->capacity)->each(fn($e) =>
+                Registration::factory()->confirmed()->create([
+                    'user_id'     => $e->id,
+                    'workshop_id' => $highDemand->id,
+                ])
+            );
+
+            $pool->skip($highDemand->capacity)->take(7)->each(fn($e) =>
+                Registration::factory()->waiting()->create([
+                    'user_id'     => $e->id,
+                    'workshop_id' => $highDemand->id,
+                ])
+            );
+        }
+
         foreach ($past as $pastWorkshop) {
             $randomEmployees = $employees->random(min(5, $employees->count()));
             foreach ($randomEmployees as $randomEmployee) {

@@ -26,6 +26,14 @@ class Workshop extends Model {
         ]);
     }
 
+    public function scopeWithRegistrationCounts($query): void {
+        $query->withCount([
+            'registrations as total_registrations_count',
+            'registrations as confirmed_registrations_count' => fn($q) => $q->where('status', RegistrationStatus::Confirmed),
+            'registrations as waiting_registrations_count'   => fn($q) => $q->where('status', RegistrationStatus::Waiting),
+        ]);
+    }
+
     public function scopeWithUserRegistration($query, int $userId): void {
         $query->addSelect([
             'registration_status' => Registration::select('status')

@@ -42,6 +42,13 @@ class WorkshopSeeder extends Seeder
             'capacity' => 20,
         ]);
 
+        Workshop::factory()->startingAt(now()->addDays(14)->setTime(14, 0))->create([
+            'user_id'     => $admin->id,
+            'title'       => 'Advanced Leadership Skills',
+            'description' => 'A highly sought-after workshop on leadership and team management.',
+            'capacity'    => 5,
+        ]);
+
         Workshop::factory()->past()->count(3)->create(['user_id' => $admin->id]);
 
         Workshop::factory()->today()->create([
