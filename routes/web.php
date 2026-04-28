@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\WorkshopController as AdminWorkshopController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
+use App\Http\Controllers\Employee\WorkshopController as EmployeeWorkshopController;
 use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'Welcome')->name('home');
 
@@ -17,6 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:employee')->prefix('employee')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])
             ->name('employee.dashboard');
+        Route::get('/workshops', [EmployeeWorkshopController::class, 'index'])
+            ->name('employee.workshops.index');
     });
 });
 

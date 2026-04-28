@@ -2,8 +2,9 @@ import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { GraduationCap, LayoutGrid } from 'lucide-vue-next';
 import { dashboard as adminDashboard } from '@/routes/admin';
-import { index as workshopsIndex } from '@/routes/admin/workshops';
+import { index as adminWorkshopsIndex } from '@/routes/admin/workshops';
 import { dashboard as employeeDashboard } from '@/routes/employee';
+import { index as employeeWorkshopsIndex } from '@/routes/employee/workshops';
 import type { NavItem } from '@/types';
 
 const adminNavItems: NavItem[] = [
@@ -14,7 +15,7 @@ const adminNavItems: NavItem[] = [
     },
     {
         title: 'Workshops',
-        href: workshopsIndex.url(),
+        href: adminWorkshopsIndex.url(),
         icon: GraduationCap,
     },
 ];
@@ -24,6 +25,11 @@ const employeeNavItems: NavItem[] = [
         title: 'Dashboard',
         href: employeeDashboard.url(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Workshops',
+        href: employeeWorkshopsIndex.url(),
+        icon: GraduationCap,
     },
 ];
 

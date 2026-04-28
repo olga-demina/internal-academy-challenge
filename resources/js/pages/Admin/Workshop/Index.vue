@@ -11,6 +11,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { CalendarDays, Users } from 'lucide-vue-next';
 import { formatRange } from '@/lib/date';
 
 defineProps<{
@@ -68,8 +69,8 @@ function executeDelete() {
                         <p class="text-sm text-gray-500">
                             {{ workshop.description }}
                         </p>
-                        <p class="mt-2 text-sm">
-                            📅
+                        <p class="mt-2 flex items-center gap-1.5 text-sm">
+                            <CalendarDays class="size-4 shrink-0" />
                             {{
                                 formatRange(
                                     workshop.starts_at,
@@ -77,8 +78,9 @@ function executeDelete() {
                                 )
                             }}
                         </p>
-                        <p class="text-sm">
-                            👥 Max seats: {{ workshop.capacity }}
+                        <p class="flex items-center gap-1.5 text-sm">
+                            <Users class="size-4 shrink-0" />
+                            Max seats: {{ workshop.capacity }}
                         </p>
                     </div>
 
