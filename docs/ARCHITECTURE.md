@@ -1,113 +1,178 @@
 # Architecture Decisions
 
-This document outlines the key architectural decisions made during the development of the Internal Academy platform, along with the rationale behind each choice.
+This document outlines the key architectural decisions made during the development of the Internal Academy platform. It is split into two parts: cross-cutting conventions that apply to the whole codebase, and feature-specific notes where relevant.
 
 ---
 
-## 1. Authentication via Laravel Vue Starter Kit
+## Part 1 - Cross-cutting Conventions
 
-Authentication (login, logout, session management) is implemented using the official **Laravel Vue Starter Kit**.
+### Authentication
 
-**Why:** It is the current officially recommended starting point for Laravel applications with a Vue frontend and it is simple and complete enought for the scope of this project.
+Authentication (login, logout, session management) is implemented using the official **Laravel Vue Starter Kit** - the currently recommended starting point for Laravel + Vue applications. No custom auth code was written.
 
-## 2. Database Schema and decisions
+---
+
+### Database Schema
 
 ![The Schema](./db_schema-v1.jpg)
 
-### Relationships
+**Relationships**
 
 - A **User** can create many **Workshops** (admin only)
 - A **User** can have many **Registrations**
 - A **Workshop** can have many **Registrations**
 - A **Registration** belongs to one **User** and one **Workshop**
 
-### Notes on key design choices
+**Key design choices**
 
-- `starts_at` / `ends_at` instead of a single `date` field — needed for overlap detection
-- `status` on `registrations` handles both confirmed seats and waiting list in a single table
+- `starts_at` / `ends_at` instead of a single `date` field - required for overlap detection
+- `status` on `registrations` handles confirmed seats and the waiting list in a single table, avoiding a separate `waiting_list` table
 - `created_at` on `registrations` drives FIFO promotion when a confirmed seat is freed
-- `promoted_at` on `registrations` tracks when a waiting user was promoted — enables historical statistics (average wait time, promotion rate per workshop)
-- `role` on `users` is a simple enum — no separate roles table needed at this scale
-- soft deletes are used to keep historical data for workshops and registrations
+- `promoted_at` on `registrations` tracks when a waiting user was promoted - enables future statistics (average wait time, promotion rate)
+- `role` on `users` is a simple string enum - no separate roles table needed at this scale
+- Soft deletes on `workshops` and `registrations` preserve historical data
 
-## 3. CRUD conventions
+---
+
+### Thin Controllers
+
+Controllers only resolve inputs and return responses. Business logic lives elsewhere:
+
+- **Authorization** → Policies (via `authorize()` in Form Requests, never in the controller)
+- **Side effects** (waitlist promotion, broadcasting) → Eloquent Observers
+- **Query logic** → Model scopes
+- **Input preparation and validation** → Form Requests
+
+This means that actions triggered outside HTTP (console commands, future admin tools) automatically benefit from the same business logic.
+
+---
+
+### Scope Queries
+
+Named scopes on models centralize reusable query logic:
+
+- `Workshop::withRegistrationCounts()` - attaches confirmed, waiting, and total registration counts
+- `Registration::confirmedForAdmin($adminId)` - filters confirmed registrations for workshops owned by a given admin
+
+Inline query logic in controllers or observers is avoided. If the definition of "confirmed for admin" needs to change, there is exactly one place to change it.
+
+---
 
 ### Form Requests
 
-Each write operation has its own FormRequest (`StoreXRequest`, `ModifyXRequest`). Authorization via policy is always done inside `authorize()`, never in the controller.
+Each write operation has its own `FormRequest` (`StoreXRequest`, `DeleteXRequest`). They handle three concerns:
 
-### Date handling
+1. **Authorization** - calls `Gate::inspect()` or `$this->authorize()` against the relevant policy
+2. **Input preparation** - `prepareForValidation()` converts dates to UTC before validation
+3. **Validation rules** - `rules()` defines the constraints
 
-- **Backend** (`prepareForValidation`): converts input dates to UTC before validation and storage.
-- **Frontend** (`lib/date.ts`): responsible for all formatting — `toDatetimeLocal()` for inputs, `formatDateTime()` / `formatRange()` for display. The backend always sends raw ISO 8601 strings.
+Authorization failure messages are read from the policy `Response` object and surfaced as a flash error redirect, keeping denial reasons in the policy rather than scattered across request classes.
+
+---
+
+### Policies
+
+Policies return `Response::allow()` / `Response::deny('reason')` instead of plain booleans. This allows each failure path to carry a human-readable message that can be forwarded to the user without duplicating strings in controllers or request classes.
+
+---
+
+### Role-based Authorization
+
+Users have one of two roles: `admin` or `employee`. Two separate route groups in `web.php` are each protected by the `EnsureRole` middleware.
+
+`User::dashboardRoute()` on the model centralizes the role→URL mapping. All redirects call this method - adding a new role requires a single change.
+
+---
 
 ### Routing (Wayfinder)
 
-Type-safe route helpers are auto-generated by Wayfinder. Never hardcode URLs in Vue components — always import from `@/routes/...`.
-
-### Feature removal
-
-When a feature is removed (e.g. registration), delete: the Vue page, all route references in other components, and the backend route/data that fed it. Leave no dead props or imports.
+Type-safe route helpers are auto-generated by Wayfinder. Vue components never hardcode URLs - they always import from `@/routes/...`. Wayfinder calls `php artisan` during `vite build`, so a PHP runtime with a valid `.env` is required at build time (relevant for Docker).
 
 ---
 
-## 4. Role-based Authorization
+### Date Handling
 
-Users are split into two roles: `admin` and `employee`. Each role has a dedicated back
-office area with its own routes and dashboard.
-
-### Routing
-
-Two separate route groups in `web.php`, each protected by the `EnsureRole` middleware:
-
-- `GET /admin/dashboard` → `Admin\DashboardController` — requires `role:admin`
-- `GET /employee/dashboard` → `Employee\DashboardController` — requires `role:employee
-`
-
-### Centralized route resolution
-
-`User::dashboardRoute()` on the model centralizes the role→URL mapping. All controller
-s call this method instead of repeating the `match` on `role`, so adding a new role re
-quires a single change.
-
-## UX / UI
-
-- automatic completion of end date set to one hour to simplify form usage
+- **Backend** (`prepareForValidation`): converts input dates to UTC before validation and storage. The database always contains UTC.
+- **Frontend** (`lib/date.ts`): responsible for all formatting - `toDatetimeLocal()` for inputs, `formatDateTime()` / `formatRange()` for display. The backend always sends raw ISO 8601 strings and never formats dates itself.
 
 ---
 
-## 5. Waitlist
+### Testing strategy
 
-### Promotion via Observer
+Tests are concentrated on the features with the most business-critical or failure-prone logic:
 
-Waitlist promotion is handled by `RegistrationObserver::deleted()`, not in the controller. This means promotion fires regardless of how a registration is deleted (controller, console, future admin action).
+- **Registration policy** - who can register, under what conditions
+- **Waitlist promotion** - FIFO order, correct status transitions
+- **Overlap prevention** - edge cases (adjacent, partial, full overlap; waiting registrations)
+- **Reminder command** - correct recipients, correct timing window
 
-### Policy does not check capacity
-
-`RegistrationPolicy::create` only checks that the user is not already registered (confirmed or waiting). The controller decides the status (confirmed vs waiting) based on availability at request time. This avoids a race condition where the policy and the controller disagree on capacity.
-
-### registration_status over is_registered
-
-The employee workshop list receives `registration_status: 'confirmed' | 'waiting' | null` instead of a boolean. Any future state added to the enum is automatically available to the frontend without a schema change.
-
-### Flash messages over client-side inference
-
-Toast messages after sign-up/cancel are driven by the backend flash session, not inferred from frontend state. This avoids showing the wrong message when availability changes between page load and form submission.
+Simple CRUD without branching logic (e.g., workshop creation form validation) is not unit-tested - the framework handles it and the surface area is small.
 
 ---
 
-## 6. No Ubiquity (overlap prevention)
+### UX Conventions
 
-An employee cannot register for two workshops that overlap in time. Adjacent workshops (one ends at T, the next starts at T) are allowed.
+- End date on workshop form is auto-filled to one hour after start date to reduce friction
+- Toast messages after form submissions are driven by backend flash session, not inferred from frontend state - avoids showing the wrong message when server-side state changes between page load and submit
 
-### Overlap condition
+---
+
+## Part 2 - Feature-specific Notes
+
+---
+
+### Waitlist
+
+**Promotion via Observer, not Controller**
+Promotion of the next waiting user is handled in `RegistrationObserver::deleted()`. Triggering it from the controller would mean it silently breaks if a registration is deleted via console, a future admin action, or a cascade. The observer fires regardless of deletion source.
+
+**Policy does not check capacity**
+`RegistrationPolicy::create` only checks that the user is not already registered (confirmed or waiting). The controller decides whether to assign `confirmed` or `waiting` status based on available seats at request time. If the policy checked capacity, it could disagree with the controller due to a race between the check and the insert.
+
+**`registration_status` over a boolean**
+The employee workshop list receives `registration_status: 'confirmed' | 'waiting' | null` instead of an `is_registered` boolean. Any new status added to the enum is available to the frontend without a prop change.
+
+---
+
+### No Ubiquity (Overlap Prevention)
+
+**Overlap condition**
 
 ```
-starts_at < other.ends_at AND ends_at > other.starts_at
+starts_at < other.ends_at  AND  ends_at > other.starts_at
 ```
 
-The check applies to both confirmed and waiting registrations — a waitlisted spot is treated as occupied since the user may be promoted.
+Adjacent workshops (one ends at T, the next starts at T) are not considered overlapping.
 
-### Policy Response objects
+**Waiting registrations count as occupied**
+The overlap check applies to both confirmed and waiting registrations. A waitlisted user may be promoted at any moment, so the time slot is treated as already taken.
 
-`RegistrationPolicy::create` returns `Response::deny('...')` instead of `false` so each failure reason carries a human-readable message. `StoreRegistrationRequest` reads this message via `Gate::inspect()` and redirects back with a flash error. This keeps authorization logic in the policy while giving the frontend a useful error message.
+---
+
+### Real-time Registration Counter (Reverb)
+
+**`ShouldBroadcastNow` over `ShouldBroadcast`**
+The event uses synchronous broadcasting. The project uses a database queue driver and the Docker setup does not run a queue worker - `ShouldBroadcast` would silently enqueue the event and never deliver it.
+
+**Observer as broadcast trigger**
+Broadcasting fires from `RegistrationObserver`, not from the controller, for the same reason as waitlist promotion: the counter must stay accurate regardless of how a registration is created or removed.
+
+**Private channel per admin**
+Each admin subscribes to `admin.{id}`. Channel authorization in `routes/channels.php` verifies both identity and role. This avoids broadcasting one admin's data to another.
+
+**Event name dot prefix**
+The frontend listens for `'.RegistrationCountChanged'` (leading dot). The Reverb/Pusher protocol requires this prefix for server-dispatched events; omitting it causes the listener to never fire.
+
+**Graceful degradation during seeding**
+`RegistrationCountChanged::dispatch()` in the observer is wrapped in a `try/catch` for `BroadcastException`. This allows `db:seed` to run when Reverb is not available (e.g., during Docker image build) without failing. Broadcasting is non-critical.
+
+**`useEcho` composable over `window.Echo`**
+The Vue component uses `useEcho` from `@laravel/echo-vue` instead of accessing `window.Echo` directly. `window.Echo` has no TypeScript type, producing a compile error; the composable provides a typed API and handles channel cleanup via the returned `leaveChannel` callback.
+
+---
+
+### Reminder Command (`academy:remind`)
+
+The `academy:remind` artisan command sends reminder emails to confirmed registrants whose workshop starts within the next 24 hours. It is designed to be run via a scheduler (`php artisan schedule:run`) as a daily cron.
+
+Emails use Laravel's `log` mailer in development (output visible in `storage/logs/laravel.log`) and can be switched to a real mailer via `.env` without code changes.
