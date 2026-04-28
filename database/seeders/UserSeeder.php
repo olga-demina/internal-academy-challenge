@@ -26,6 +26,12 @@ class UserSeeder extends Seeder {
             'password' => Hash::make('password'),
         ]);
 
+        User::factory()->employee()->create([
+            'name'     => 'Employee User 2',
+            'email'    => 'employee2@academy.test',
+            'password' => Hash::make('password'),
+        ]);
+
         User::factory()->employee()->count(10)->create();
     }
 }
