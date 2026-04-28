@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { create, edit, destroy } from '@/routes/admin/workshops';
+import { create, edit, destroy, index } from '@/routes/admin/workshops';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -27,6 +27,7 @@ defineProps<{
             available_seats: number;
         }>;
     };
+    filter: 'upcoming' | 'all';
 }>();
 
 const workshopToDelete = ref<number | null>(null);
@@ -51,9 +52,30 @@ function executeDelete() {
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-semibold">My Workshops</h1>
 
-            <Link :href="create()">
-                <Button>Create Workshop</Button>
-            </Link>
+            <div class="flex items-center gap-3">
+                <div class="flex rounded-md border">
+                    <Link :href="index({ query: { filter: 'upcoming' } })">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            :class="filter === 'upcoming' ? 'bg-muted font-semibold' : ''"
+                            class="rounded-r-none"
+                        >Upcoming</Button>
+                    </Link>
+                    <Link :href="index({ query: { filter: 'all' } })">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            :class="filter === 'all' ? 'bg-muted font-semibold' : ''"
+                            class="rounded-l-none border-l"
+                        >All</Button>
+                    </Link>
+                </div>
+
+                <Link :href="create()">
+                    <Button>Create Workshop</Button>
+                </Link>
+            </div>
         </div>
 
         <!-- List -->

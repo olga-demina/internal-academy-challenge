@@ -16,13 +16,19 @@ class WorkshopController extends Controller {
      * Display a listing of the resource.
      */
     public function index(Request $request): Response {
+        $filter = $request->query('filter', 'upcoming');
+
         $workshops = $request->user()
             ->workshops()
             ->withAvailableSeats()
-            ->latest()
-            ->paginate(10);
+            ->when($filter === 'upcoming', fn($q) => $q->where('starts_at', '>', now()))
+            ->orderBy('starts_at')
+            ->paginate(10)
+            ->withQueryString();
+
         return Inertia::render('Admin/Workshop/Index', [
-            'workshops' => $workshops
+            'workshops' => $workshops,
+            'filter'    => $filter,
         ]);
     }
 
