@@ -51,6 +51,24 @@ test('employee cannot join waitlist if already waiting', function () {
 });
 
 
+// --- overlap ---
+
+test('employee cannot register for a workshop that overlaps with a confirmed registration', function () {
+    $employee = User::factory()->employee()->create();
+    $slot = now()->addDay()->setTime(10, 0);
+
+    $existing = Workshop::factory()->startingAt($slot)->create(['capacity' => 10]); // 10:00–12:00
+    Registration::factory()->confirmed()->create([
+        'user_id'     => $employee->id,
+        'workshop_id' => $existing->id,
+    ]);
+
+    $overlapping = Workshop::factory()->startingAt($slot->setTime(11, 0))->create(['capacity' => 10]); // 11:00–13:00
+
+    expect($employee->can('create', [Registration::class, $overlapping]))->toBeFalse();
+});
+
+
 test('admin cannot register for a workshop', function () {
     $admin = User::factory()->admin()->create();
     $workshop = Workshop::factory()->create(['capacity' => 10]);

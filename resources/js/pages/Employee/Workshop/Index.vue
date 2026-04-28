@@ -53,8 +53,9 @@ function signUp(workshop: Workshop) {
         {},
         {
             onSuccess: () => {
-                const { success } = page.props.flash as { success?: string };
-                if (success) toast.success(success);
+                const flash = page.props.flash as { success?: string; error?: string };
+                if (flash.success) toast.success(flash.success);
+                if (flash.error) toast.error(flash.error);
             },
         },
     );
